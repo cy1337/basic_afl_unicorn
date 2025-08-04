@@ -61,9 +61,9 @@ exits = [return_addr]
 ```
 With that in place, we can start the AFL++ fuzzing campaign using something like:
 ```bash
-afl-fuzz -U -i in -o out -- python3 pico_w_fuzz_example.py @@
+afl-fuzz -U -i in -o out -G 4096 -- python3 pico_w_fuzz_example.py @@
 ```
-I seeded my fuzz with a single byte testcase (e.g. `echo -ne A > in/1`) and AFL++ Unicorn mode went to work discovering paths. This specific example is a simple set of if statements which perform single byte checks on the input. If the input matches a secret key it will cause a null pointer dereference. Each time AFL++ adds an input to the corpus, it means that it has identified another byte from the secret input. On my not-so-fancy laptop, it took about 5 minutes to recover the secret passphrase which causes this firmware to crash.
+I seeded my fuzz with a single byte testcase (e.g. `echo -ne A > in/1`) and AFL++ Unicorn mode went to work discovering paths. Note that I've included '-G 4096' as an AFL parameter. This sets a maximum size on the testcases AFL will test and corresponds to how much memory we mapped in the emulator. Experimenting with smaller sizes may improve performance of the fuzz. This specific example is a simple set of if statements which perform single byte checks on the input. If the input matches a secret key it will cause a null pointer dereference. Each time AFL++ adds an input to the corpus, it means that it has identified another byte from the secret input. On my not-so-fancy laptop, it took about 5 minutes to recover the secret passphrase which causes this firmware to crash.
 ![AFL++ Status Screen](./img/afl.png)
 
 You can run the supplied firmware on a Pico W to see this in action. After loading the ELF onto a device, it will wait for a USB serial connection (115200 baud) before starting FreeRTOS and connecting to a wifi network with SSID 'DemoNet' and PSK 'Password123!'. The IP address will be printed on the serial console if the connection succeeds. You can then send testcases to the target function using curl (substituting your IP and the secret value found by fuzzing):
