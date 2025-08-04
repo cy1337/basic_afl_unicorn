@@ -61,7 +61,7 @@ exits = [return_addr]
 ```
 With that in place, we can start the AFL++ fuzzing campaign using something like:
 ```bash
-afl-fuzz -U -i in -o out - python3 pico_w_fuzz_example.py @@
+afl-fuzz -U -i in -o out -- python3 pico_w_fuzz_example.py @@
 ```
 I seeded my fuzz with a single byte testcase (e.g. `echo -ne A > in/1`) and AFL++ Unicorn mode went to work discovering paths. This specific example is a simple set of if statements which perform single byte checks on the input. If the input matches a secret key it will cause a null pointer dereference. Each time AFL++ adds an input to the corpus, it means that it has identified another byte from the secret input. On my not-so-fancy laptop, it took about 5 minutes to recover the secret passphrase which causes this firmware to crash.
 ![AFL++ Status Screen](./img/afl.png)
